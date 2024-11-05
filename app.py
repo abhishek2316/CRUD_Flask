@@ -11,7 +11,7 @@ def format_employee(employee):
     employee['_id'] = str(employee['_id'])
     return employee
 
-
+@app.route('/')
 @app.route('/form')
 def fill_form():
     return render_template('form/index.html')
