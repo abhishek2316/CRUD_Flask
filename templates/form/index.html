@@ -39,9 +39,9 @@
                             </span>
                         </th>
                         <th>EmployeeId
-                        <th>
                         <th>Name</th>
                         <th>Designation</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="employeeList">
@@ -65,18 +65,6 @@
                     </tr> -->
                 </tbody>
             </table>
-            <div class="clearfix">
-                <div class="hint-text">Showing <b>5</b> out of <b>25</b> entries</div>
-                <ul class="pagination">
-                    <li class="page-item disabled"><a href="#">Previous</a></li>
-                    <li class="page-item"><a href="#" class="page-link">1</a></li>
-                    <li class="page-item"><a href="#" class="page-link">2</a></li>
-                    <li class="page-item active"><a href="#" class="page-link">3</a></li>
-                    <li class="page-item"><a href="#" class="page-link">4</a></li>
-                    <li class="page-item"><a href="#" class="page-link">5</a></li>
-                    <li class="page-item"><a href="#" class="page-link">Next</a></li>
-                </ul>
-            </div>
         </div>
     </div>
     <!-- Edit Modal HTML -->
@@ -115,7 +103,7 @@
     <div id="editEmployeeModal" class="modal fade">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form>
+                <form id="editEmployeeForm">
                     <div class="modal-header">
                         <h4 class="modal-title">Edit Employee</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -431,6 +419,7 @@
     }
 </style>
 <script>
+    let selectedEmpId = null;
     function getEmployees() {
         fetch('/api/employee')
             .then(response => response.json())
@@ -448,8 +437,11 @@
                         <td>${emp.name}</td>
                         <td>${emp.designation}</td>
                         <td>
-                            <button onclick="editEmployee(${emp.empid})" class="btn btn-primary">Edit</button>
-                            <button onclick="deleteEmployee(${emp.empid})" class="btn btn-danger">Delete</button>
+                            <a href="#editEmployeeModal" class="edit" data-toggle="modal" onclick="openEditModal(${emp.empid}, '${emp.name}', '${emp.designation}')">
+                                <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
+                            </a>
+                            <a href="#deleteEmployeeModal" onclick="deleteEmployee(${emp.empid})" class="delete" data-toggle="modal"><i class="material-icons"
+                                    data-toggle="tooltip" title="Delete">&#xE872;</i></a>
                         </td>
                     </tr>`;
                 });
@@ -457,6 +449,36 @@
             })
             .catch(error => console.error('Error:', error));
     }
+
+    // Open edit modal and pre-fill fields
+    function openEditModal(empid, name, designation) {
+        selectedEmpId = empid;
+        document.getElementById('editName').value = name;
+        document.getElementById('editDesignation').value = designation;
+    }
+
+    // Handle form submission for editing employee
+    document.getElementById('editEmployeeForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const updatedData = {
+            name: document.getElementById('editName').value,
+            designation: document.getElementById('editDesignation').value
+        };
+
+        fetch(`/api/employee?empid=${selectedEmpId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                $('#editEmployeeModal').modal('hide');
+                getEmployees();  // Refresh the employee list
+            })
+            .catch(error => console.error('Error:', error));
+    });
 
     // Edit employee function
     function editEmployee(empid) {
@@ -493,8 +515,7 @@
         }
     }
 
-    // Initial load of employees
-    getEmployees();
+    
 
     function addEmployee() {
         const empid = document.getElementById('empid').value;
@@ -538,6 +559,9 @@
             }
         });
     });
+
+    // Initial load of employees
+    getEmployees();
 </script>
 
 </html>
